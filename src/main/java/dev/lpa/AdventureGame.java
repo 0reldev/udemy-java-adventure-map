@@ -9,7 +9,7 @@ public class AdventureGame {
 
     private static final String GAME_LOCATIONS = """
             road,at the end of the road, W: hill, E:well house,S:valley,N:forest
-            hill,on top of hill with a view in all directions,N:forst, E:road
+            hill,on top of hill with a view in all directions,N:forest, E:road
             well house,inside a well house for a small springs,W:road,N:lake,S:stream
             valley,in a forest valley beside a tumbling stream,N:road,W:hill, E:stream
             forest,at the edge of a thick dark forest,S:road,E:lake
@@ -29,15 +29,19 @@ public class AdventureGame {
 
     private record Location(String description, Map<Compass, String> nextPlaces) {}
 
-    private String lastPlaces;
+    private String lastPlace;
 
     private Map<String, Location> adventureMap = new HashMap<>();
 
     public AdventureGame() {
+        this(null);
     }
 
     public AdventureGame(String customLocations) {
-
+        loadLocations(GAME_LOCATIONS);
+        if (customLocations != null) {
+            loadLocations(customLocations);
+        }
     }
 
     private void loadLocations(String data) {
@@ -48,7 +52,7 @@ public class AdventureGame {
             Location location = new Location(parts[1], nextPlaces);
             adventureMap.put(parts[0], location);
         }
-        adventureMap.forEach((k, v) -> System.out.printf("%s:%s%n", k, v));
+//        adventureMap.forEach((k, v) -> System.out.printf("%s:%s%n", k, v));
     }
 
     private Map<Compass, String> loadDirections(String nextPlaces) {
@@ -63,5 +67,41 @@ public class AdventureGame {
             directions.put(compass, destination);
         }
         return directions;
+    }
+
+    private void visit(Location location) {
+
+        System.out.printf("*** You're standing %s *** %n", location.description);
+        System.out.println("\tFrom here, you ca see:");
+
+        location.nextPlaces.forEach((k, v) -> {
+            System.out.printf("\t - A %s to the %s (%S) %n", v, k.getString(), k);
+        });
+        System.out.print("Select your Compass (Q to quit) >> ");
+    }
+
+    public void move (String direction) {
+
+        var nextPlaces = adventureMap.get(lastPlace).nextPlaces;
+        String nextPlace = null;
+        if ("ENSW".contains(direction)) {
+            nextPlace = nextPlaces.get(Compass.valueOf(direction));
+            if (nextPlace != null) {
+                play(nextPlace);
+            }
+        } else {
+            System.out.println("!! Invalid direction, try again!!");
+        }
+    }
+
+    public void play(String location) {
+
+        if (adventureMap.containsKey(location)) {
+            Location next = adventureMap.get(location);
+            lastPlace = location;
+            visit(next);
+        } else {
+            System.out.println(location + " is an invalid location");
+        }
     }
 }
